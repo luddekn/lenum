@@ -54,10 +54,9 @@ echo "${RED}${BOLD}[*] Current User Information${RESET}"
 echo "${YELLOW}Current User:${RESET} $(whoami)"
 echo "${YELLOW}ID:${RESET} $(id | cut -d " " -f 1-2)"
 echo "${YELLOW}Groups:${RESET} $(groups)"
-if [ "$(id -u)" -eq 0 ]; then
-    echo "${YELLOW}[*] Sudo Privileges${RESET}"
-    sudo -l
-fi
+echo "${YELLOW}Sudo Privileges${RESET}"
+sudo -l -U $(whoami) | sed '1d; 2d; 3d'
+
 
 
 echo "\n"
