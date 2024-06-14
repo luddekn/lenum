@@ -57,8 +57,6 @@ echo "${YELLOW}Groups:${RESET} $(groups)"
 echo "${YELLOW}Sudo Privileges${RESET}"
 sudo -l -U $(whoami) | sed '1d; 2d; 3d'
 
-
-
 echo "\n"
 
 echo "${RED}${BOLD}[*] User Enumeration${RESET}"
