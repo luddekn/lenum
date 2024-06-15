@@ -37,6 +37,30 @@ help() {
     echo "- os, netinfo, netscan, user, interesting, help, exit"
 }
 
+sudo_pass() {
+    if [ "$(id -u)" -eq 0 ]; then
+        echo "You are running as root. No need to input sudo password."
+        echo ""
+        return
+    fi
+
+    echo -n "Sudo password for current user '$(whoami)' (press ENTER to skip): "
+
+    stty -echo
+    read sudo_password
+    stty echo
+    echo
+
+    if [ -z "$sudo_password" ]; then
+        sudo_password_set=false
+        echo ""
+    else
+        echo "Sudo password has been set!"
+        sudo_password_set=true
+        echo ""
+    fi
+}
+
 # Function to gather OS information
 os() {
     echo ""
@@ -91,8 +115,15 @@ user() {
     echo "${YELLOW}Current User:${RESET} $(whoami)"
     echo "${YELLOW}ID:${RESET} $(id | cut -d " " -f 1-2)"
     echo "${YELLOW}Groups:${RESET} $(groups)"
-    echo "${YELLOW}Sudo Privileges${RESET}"
-    sudo -l -U "$(whoami)" | sed '1d; 2d; 3d'
+    if [ "$(id -u)" -eq 0 ]; then
+        echo "${YELLOW}Sudo Privileges${RESET}"
+        sudo -l -U "$(whoami)" | sed '1,3d'
+    else
+        if [ "$sudo_password_set" = true  ]; then
+            echo "${YELLOW}Sudo Privileges${RESET}"
+            echo "$sudo_password" | sudo -S -l -U "$(whoami)" | sed '1,3d'
+        fi
+    fi
 
     echo "\n"
 
@@ -165,6 +196,7 @@ strip_colors() {
 
 banner
 echo "Type 'help' to see available commands!"
+sudo_pass
 generate_html() {
     OUTPUT_FILE="$1"
     COMMANDS_FILE="$2"
@@ -286,9 +318,10 @@ if [ "$1" = "-o" ]; then
 				interesting
 				;;
 			"exit")
-				echo "${RED}Exiting enum script.${RESET}"
+				echo "${RED}Exiting lenum script.${RESET}"
 				generate_html "$OUTPUT_FILE" "$COMMAND_FILE"
 				rm "$COMMAND_FILE"  # Clean up temporary command file
+                unset sudo_password
 				exit 0
 				;;
 			*)
@@ -320,7 +353,8 @@ else
                 interesting
                 ;;
             "exit")
-                echo "${RED}Exiting enum script.${RESET}"
+                echo "${RED}Exiting lenum script.${RESET}"
+                unset sudo_password
                 exit 0
                 ;;
             *)
