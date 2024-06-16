@@ -62,7 +62,7 @@ sudo_pass() {
 }
 
 # Function to gather OS information
-os() {
+os_information() {
     echo ""
     echo "${RED}${BOLD}[*] OS / System Information${RESET}"
     echo "${YELLOW}OS:${RESET} $(grep PRETTY_NAME /etc/os-release | cut -d '"' -f 2)"
@@ -120,8 +120,8 @@ user() {
         sudo -l -U "$(whoami)" | sed '1,3d'
     else
         if [ "$sudo_password_set" = true  ]; then
-            echo "${YELLOW}Sudo Privileges${RESET}"
-            echo "$sudo_password" | sudo -S -l -U "$(whoami)" | sed '1,3d'
+            echo "${YELLOW}Sudo Privileges:${RESET}"
+            sudo -l -U "$(whoami)" | sed '1,3d' 2>/dev/null
         fi
     fi
 
@@ -136,7 +136,12 @@ user() {
             hash=$(awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
             echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
         else
-            echo "${YELLOW}User:${RESET} $user ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
+            if [ "$sudo_password_set" = true  ]; then
+                hash=$(echo "$sudo_password" | sudo -S awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
+                echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
+            else
+                echo "${YELLOW}User:${RESET} $user ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
+            fi
         fi
     done
 }
@@ -157,6 +162,12 @@ interesting() {
     if [ "$(id -u)" -eq 0 ] && [ -d "/root/.ssh" ]; then
         echo "${YELLOW}SSH Directory:${RESET} /root/.ssh"
         found_dir=true
+    elif [ "$sudo_password_set" = true ]; then
+        ssh_dir=$(echo "$sudo_password" | sudo -S find /root -name ".ssh" 2>/dev/null)
+        if [ -n "$ssh_dir" ]; then
+            echo "${YELLOW}SSH Directory:${RESET} $ssh_dir"
+            found_dir=true
+        fi
     fi
 
     if ! $found_dir; then
@@ -179,6 +190,13 @@ interesting() {
     if [ "$(id -u)" -eq 0 ]; then
         for hist_file in /root/.bash_history /root/.zsh_history /root/.sh_history /root/.ksh_history /root/.history /root/.local/share/fish/fish_history; do
             if [ -e "$hist_file" ]; then
+                echo "${YELLOW}History File:${RESET} $hist_file"
+                found_file=true
+            fi
+        done
+    elif [ "$sudo_password_set" = true ]; then
+        for hist_file in /root/.bash_history /root/.zsh_history /root/.sh_history /root/.ksh_history /root/.history /root/.local/share/fish/fish_history; do
+            if echo "$sudo_password" | sudo -S test -e "$hist_file" 2>/dev/null; then
                 echo "${YELLOW}History File:${RESET} $hist_file"
                 found_file=true
             fi
@@ -303,7 +321,7 @@ if [ "$1" = "-o" ]; then
 				help
 				;;
 			"os")
-				os
+				os_information
 				;;
 			"netinfo")
 				network_info
@@ -338,7 +356,7 @@ else
                 help
                 ;;
             "os")
-                os
+                os_information
                 ;;
             "netinfo")
                 network_info
