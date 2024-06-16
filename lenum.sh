@@ -11,6 +11,7 @@ YELLOW="\e[33m"
 LGREEN="\e[92m"
 LCYAN="\e[96m"
 CYAN="\e[36m"
+LMAGENTA="\e[95m"
 # Text Weight
 BOLD="\e[1m"
 ITALIC="\e[3m"
@@ -34,7 +35,14 @@ banner() {
 help() {
     echo ""
     echo "${YELLOW}Available commands:${RESET}"
-    echo "- os, netinfo, netscan, user, interesting, help, exit"
+    echo "  -> ${LMAGENTA}${BOLD}os${RESET}: Display information about the operating system."
+    echo "  -> ${LMAGENTA}${BOLD}env${RESET}: Display information about the current environment."
+    echo "  -> ${LMAGENTA}${BOLD}user${RESET}: Show details of the current user and information about other users."
+    echo "  -> ${LMAGENTA}${BOLD}netinfo${RESET}: Display network configuration and status."
+    echo "  -> ${LMAGENTA}${BOLD}netscan${RESET}: Perform a ping sweep on all network interfaces."
+    echo "  -> ${LMAGENTA}${BOLD}interesting${RESET}: Identify and list interesting files or directories for further inspection."
+    echo "  -> ${LMAGENTA}${BOLD}exit${RESET}: Exit the script."
+    echo "  -> ${LMAGENTA}${BOLD}help${RESET}: Display this help menu."
 }
 
 sudo_pass() {
@@ -75,24 +83,51 @@ os_information() {
 environment() {
     echo ""
     echo "${RED}${BOLD}[*] Environment Information${RESET}"
-    
+    echo "${YELLOW}User:${RESET} $USER"
+    echo "${YELLOW}Home:${RESET} $HOME"
+    echo "${YELLOW}Shell:${RESET} $SHELL"
+    echo "${YELLOW}Working Directory:${RESET} $PWD"
+    echo "${YELLOW}Session Type:${RESET} $XDG_SESSION_TYPE"
+    echo "${YELLOW}Desktop Environment:${RESET} $XDG_CURRENT_DESKTOP"
+    echo "${YELLOW}Language:${RESET} $LANG"
+    echo "${YELLOW}Locale:${RESET} $LANGUAGE"
+    echo "${YELLOW}PATH:${RESET} $PATH"
+    echo "${YELLOW}SSH Agent PID:${RESET} $SSH_AGENT_PID"
+    echo "${YELLOW}SSH Auth Socket:${RESET} $SSH_AUTH_SOCK"
+    echo "${YELLOW}DBUS Session Bus Address:${RESET} $DBUS_SESSION_BUS_ADDRESS"
+    echo "${YELLOW}Display:${RESET} $DISPLAY"
+    echo "${YELLOW}X Authority File:${RESET} $XAUTHORITY"
+    echo "${YELLOW}Runtime Directory:${RESET} $XDG_RUNTIME_DIR"
 }
 
 # Function to gather network information
 network_info() {
     echo ""
     echo "${RED}${BOLD}[*] Network Information${RESET}"
-    echo "${LGREEN}${ITALIC}# Listing all interfaces!${RESET}\n"
+    echo "${LGREEN}${ITALIC}# Listing all interfaces!${RESET}"
+    echo ""
     for interface in $(ip a | awk '/^[0-9]+:/ { sub(/:/, "", $2); print $2 }' 2>/dev/null); do
-        ip=$(ip a show dev "$interface" | awk '/inet / {print $2}' | cut -d '/' -f 1 2>/dev/null)
+        ip=$(ip -4 -o addr show dev "$interface" | awk '{print $4}' 2>/dev/null)
         if [ -n "$ip" ]; then
             echo "${YELLOW}Interface:${RESET} $interface : $ip"
         fi
     done
 
-    echo "\n"
+    echo ""
+
     echo "${YELLOW}Default Route:${RESET} $(ip route | grep -w "default" | cut -d " " -f 5) $(ip route | grep -w "default" | cut -d " " -f 3 2>/dev/null)"
     echo "${YELLOW}DNS Nameserver:${RESET} $(awk '/nameserver/ {print $2}' /etc/resolv.conf 2>/dev/null)"
+
+    echo ""
+
+    if [ "$sudo_password_set" = true  ]; then
+        echo "${YELLOW}Open Ports:${RESET}"
+        echo "$sudo_password" | sudo -S netstat -tunlp | sed '1d' 2>/dev/null
+    else
+        echo "${YELLOW}Open Ports:${RESET}"
+        netstat -tunlp | sed '1d' 2>/dev/null
+    fi
+    echo ""
 }
 
 # Function to perform network scanning
@@ -100,7 +135,7 @@ network_scan() {
     echo ""
     echo "${RED}${BOLD}[*] Network Scan${RESET}"
     for interface in $(ip a | awk '/^[0-9]+:/ { sub(/:/, "", $2); print $2 }' 2>/dev/null); do
-        ip=$(ip a show dev $interface | awk '/inet / {print $2}' | cut -d '/' -f 1 2>/dev/null)
+        ip=$(ip -4 -o addr show dev $interface | awk '{print $4}' | cut -d '/' -f 1 2>/dev/null)
         if [ -n "$ip" ]; then
             network_address=$(echo $ip | cut -d "." -f 1-3 2>/dev/null)
             if [ "$network_address" = "127.0.0" ]; then
@@ -144,10 +179,11 @@ user() {
         fi
     fi
 
-    echo "\n"
+    echo ""
 
     echo "${RED}${BOLD}[*] Other User Enumeration${RESET}"
-    echo "${LGREEN}${ITALIC}# Listing all users with shell!${RESET}\n"
+    echo "${LGREEN}${ITALIC}# Listing all users with shell!${RESET}"
+    echo ""
     awk -F: '$7 ~ /(\/bin\/bash|\/bin\/sh|\/bin\/ksh|\/bin\/zsh|\/usr\/bin\/fish)$/ {print $1}' /etc/passwd 2>/dev/null | while read -r user; do
         groups=$(groups "$user" | cut -d ":" -f 2 2>/dev/null)
         home_dir=$(getent passwd "$user" | cut -d ":" -f 6 2>/dev/null)
@@ -203,7 +239,7 @@ interesting() {
         echo "${LGREEN}${ITALIC}# Found no .ssh directories!${RESET}"
     fi
 
-    echo "\n"
+    echo ""
 
     echo "${RED}${BOLD}[*] Listing User History Files${RESET}"
     found_file=false
@@ -241,6 +277,8 @@ strip_colors() {
     sed -r "s/\x1B\[[0-9;]*[mK]//g"
 }
 
+# Starting script
+echo ""
 banner
 echo "Type 'help' to see available commands!"
 sudo_pass
@@ -293,6 +331,12 @@ EOF
                 echo "<h3>OS Information</h3>" >> "$OUTPUT_FILE"
                 echo "<pre>" >> "$OUTPUT_FILE"
                 os | strip_colors >> "$OUTPUT_FILE"
+                echo "</pre>" >> "$OUTPUT_FILE"
+                ;;
+            "env")
+                echo "<h3>Environment Information</h3>" >> "$OUTPUT_FILE"
+                echo "<pre>" >> "$OUTPUT_FILE"
+                environment | strip_colors >> "$OUTPUT_FILE"
                 echo "</pre>" >> "$OUTPUT_FILE"
                 ;;
             "netinfo")
@@ -352,6 +396,9 @@ if [ "$1" = "-o" ]; then
 			"os")
 				os_information
 				;;
+            "env")
+                environment
+                ;;
 			"netinfo")
 				network_info
 				;;
@@ -366,6 +413,7 @@ if [ "$1" = "-o" ]; then
 				;;
 			"exit")
 				echo "${RED}Exiting lenum script.${RESET}"
+                echo ""
 				generate_html "$OUTPUT_FILE" "$COMMAND_FILE"
 				rm "$COMMAND_FILE"  # Clean up temporary command file
                 unset sudo_password
@@ -387,6 +435,9 @@ else
             "os")
                 os_information
                 ;;
+            "env")
+                environment
+                ;;
             "netinfo")
                 network_info
                 ;;
@@ -401,6 +452,7 @@ else
                 ;;
             "exit")
                 echo "${RED}Exiting lenum script.${RESET}"
+                echo ""
                 unset sudo_password
                 exit 0
                 ;;
