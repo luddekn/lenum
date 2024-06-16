@@ -65,10 +65,17 @@ sudo_pass() {
 os_information() {
     echo ""
     echo "${RED}${BOLD}[*] OS / System Information${RESET}"
-    echo "${YELLOW}OS:${RESET} $(grep PRETTY_NAME /etc/os-release | cut -d '"' -f 2)"
-    echo "${YELLOW}OS Version:${RESET} $(grep -w 'VERSION' /etc/os-release | cut -d '"' -f 2)"
-    echo "${YELLOW}Linux Kernel:${RESET} $(uname -r)"
-    echo "${YELLOW}Hostname:${RESET} $(hostname)"
+    echo "${YELLOW}OS:${RESET} $(grep PRETTY_NAME /etc/os-release | cut -d '"' -f 2 2>/dev/null)"
+    echo "${YELLOW}OS Version:${RESET} $(grep -w 'VERSION' /etc/os-release | cut -d '"' -f 2 2>/dev/null)"
+    echo "${YELLOW}Linux Kernel:${RESET} $(uname -r 2>/dev/null)"
+    echo "${YELLOW}Hostname:${RESET} $(hostname 2>/dev/null)"
+}
+
+# Function to gather environment data
+environment() {
+    echo ""
+    echo "${RED}${BOLD}[*] Environment Information${RESET}"
+    
 }
 
 # Function to gather network information
@@ -76,26 +83,26 @@ network_info() {
     echo ""
     echo "${RED}${BOLD}[*] Network Information${RESET}"
     echo "${LGREEN}${ITALIC}# Listing all interfaces!${RESET}\n"
-    for interface in $(ip a | awk '/^[0-9]+:/ { sub(/:/, "", $2); print $2 }'); do
-        ip=$(ip a show dev "$interface" | awk '/inet / {print $2}' | cut -d '/' -f 1)
+    for interface in $(ip a | awk '/^[0-9]+:/ { sub(/:/, "", $2); print $2 }' 2>/dev/null); do
+        ip=$(ip a show dev "$interface" | awk '/inet / {print $2}' | cut -d '/' -f 1 2>/dev/null)
         if [ -n "$ip" ]; then
             echo "${YELLOW}Interface:${RESET} $interface : $ip"
         fi
     done
 
     echo "\n"
-    echo "${YELLOW}Default Route:${RESET} $(ip route | grep -w "default" | cut -d " " -f 5) $(ip route | grep -w "default" | cut -d " " -f 3)"
-    echo "${YELLOW}DNS Nameserver:${RESET} $(awk '/nameserver/ {print $2}' /etc/resolv.conf)"
+    echo "${YELLOW}Default Route:${RESET} $(ip route | grep -w "default" | cut -d " " -f 5) $(ip route | grep -w "default" | cut -d " " -f 3 2>/dev/null)"
+    echo "${YELLOW}DNS Nameserver:${RESET} $(awk '/nameserver/ {print $2}' /etc/resolv.conf 2>/dev/null)"
 }
 
 # Function to perform network scanning
 network_scan() {
     echo ""
     echo "${RED}${BOLD}[*] Network Scan${RESET}"
-    for interface in $(ip a | awk '/^[0-9]+:/ { sub(/:/, "", $2); print $2 }'); do
-        ip=$(ip a show dev $interface | awk '/inet / {print $2}' | cut -d '/' -f 1)
+    for interface in $(ip a | awk '/^[0-9]+:/ { sub(/:/, "", $2); print $2 }' 2>/dev/null); do
+        ip=$(ip a show dev $interface | awk '/inet / {print $2}' | cut -d '/' -f 1 2>/dev/null)
         if [ -n "$ip" ]; then
-            network_address=$(echo $ip | cut -d "." -f 1-3)
+            network_address=$(echo $ip | cut -d "." -f 1-3 2>/dev/null)
             if [ "$network_address" = "127.0.0" ]; then
                 continue
             fi
@@ -112,16 +119,28 @@ network_scan() {
 user() {
     echo ""
     echo "${RED}${BOLD}[*] Current User Information${RESET}"
-    echo "${YELLOW}Current User:${RESET} $(whoami)"
-    echo "${YELLOW}ID:${RESET} $(id | cut -d " " -f 1-2)"
-    echo "${YELLOW}Groups:${RESET} $(groups)"
+    echo "${YELLOW}Current User:${RESET} $(whoami 2>/dev/null)"
+    echo "${YELLOW}ID:${RESET} $(id | cut -d " " -f 1-2 2>/dev/null)"
+    echo "${YELLOW}Groups:${RESET} $(groups 2>/dev/null)"
+    reading_shadow=$(cat /etc/shadow 2>/dev/null)
+    if [ "$reading_shadow" ]; then
+        echo "${YELLOW}Can we read shadow file without sudo?:${RESET} ${LGREEN}YES${RESET}"
+    else
+        echo "${YELLOW}Can we read shadow file without sudo?:${RESET} ${RED}NO${RESET}"
+    fi
+    accessing_root=$(ls /root 2>/dev/null)
+    if [ "$accessing_root" ]; then
+        echo "${YELLOW}Can we access /root without sudo?:${RESET} ${LGREEN}YES${RESET}"
+    else
+        echo "${YELLOW}Can we access /root without sudo?:${RESET} ${RED}NO${RESET}"
+    fi
     if [ "$(id -u)" -eq 0 ]; then
-        echo "${YELLOW}Sudo Privileges${RESET}"
-        sudo -l -U "$(whoami)" | sed '1,3d'
+        echo "${YELLOW}Sudo Privileges:${RESET}"
+        sudo -l -U "$(whoami)" | sed '1,3d' 2>/dev/null
     else
         if [ "$sudo_password_set" = true  ]; then
             echo "${YELLOW}Sudo Privileges:${RESET}"
-            sudo -l -U "$(whoami)" | sed '1,3d' 2>/dev/null
+            echo "$sudo_password" | sudo -S -l | sed '1,3d' 2>/dev/null
         fi
     fi
 
@@ -129,9 +148,9 @@ user() {
 
     echo "${RED}${BOLD}[*] Other User Enumeration${RESET}"
     echo "${LGREEN}${ITALIC}# Listing all users with shell!${RESET}\n"
-    awk -F: '$7 ~ /(\/bin\/bash|\/bin\/sh|\/bin\/ksh|\/bin\/zsh|\/usr\/bin\/fish)$/ {print $1}' /etc/passwd | while read -r user; do
-        groups=$(groups "$user" | cut -d ":" -f 2)
-        home_dir=$(getent passwd "$user" | cut -d ":" -f 6)
+    awk -F: '$7 ~ /(\/bin\/bash|\/bin\/sh|\/bin\/ksh|\/bin\/zsh|\/usr\/bin\/fish)$/ {print $1}' /etc/passwd 2>/dev/null | while read -r user; do
+        groups=$(groups "$user" | cut -d ":" -f 2 2>/dev/null)
+        home_dir=$(getent passwd "$user" | cut -d ":" -f 6 2>/dev/null)
         if [ "$(id -u)" -eq 0 ]; then
             hash=$(awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
             echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
@@ -144,6 +163,16 @@ user() {
             fi
         fi
     done
+
+    echo "${RED}${BOLD}[*] List of Root Users${RESET}"
+    root_users=$(cat /etc/passwd 2>/dev/null | awk -F: '$3 == 0 { print $1}' 2>/dev/null)
+    if [ "$root_users" ]; then
+        for user in $root_users; do
+            echo "${YELLOW}User:${RESET} $user"
+        done
+    else
+        echo "${LGREEN}${ITALIC}# Found no root user's!${RESET}"
+    fi
 }
 
 # Function to gather interesting files and directories
@@ -170,7 +199,7 @@ interesting() {
         fi
     fi
 
-    if ! $found_dir; then
+    if [ "$found_dir" = false ]; then
         echo "${LGREEN}${ITALIC}# Found no .ssh directories!${RESET}"
     fi
 
@@ -203,7 +232,7 @@ interesting() {
         done
     fi
 
-    if ! $found_file; then
+    if [ "$found_file" = false ]; then
         echo "${LGREEN}${ITALIC}# Found no history files!${RESET}"
     fi
 }
