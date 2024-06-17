@@ -122,10 +122,10 @@ network_info() {
 
     if [ "$sudo_password_set" = true  ]; then
         echo "${YELLOW}Open Ports:${RESET}"
-        echo "$sudo_password" | sudo -S netstat -tunlp | sed '1d' 2>/dev/null
+        echo "$sudo_password" | sudo -S netstat -tunlp 2>/dev/null | sed '1d'
     else
         echo "${YELLOW}Open Ports:${RESET}"
-        netstat -tunlp | sed '1d' 2>/dev/null
+        netstat -tunlp 2>/dev/null | sed '1d'
     fi
     echo ""
 }
@@ -155,7 +155,7 @@ user() {
     echo ""
     echo "${RED}${BOLD}[*] Current User Information${RESET}"
     echo "${YELLOW}Current User:${RESET} $(whoami 2>/dev/null)"
-    echo "${YELLOW}ID:${RESET} $(id | cut -d " " -f 1-2 2>/dev/null)"
+    echo "${YELLOW}ID:${RESET} $(id 2>/dev/null | cut -d " " -f 1-2)"
     echo "${YELLOW}Groups:${RESET} $(groups 2>/dev/null)"
     reading_shadow=$(cat /etc/shadow 2>/dev/null)
     if [ "$reading_shadow" ]; then
@@ -171,11 +171,11 @@ user() {
     fi
     if [ "$(id -u)" -eq 0 ]; then
         echo "${YELLOW}Sudo Privileges:${RESET}"
-        sudo -l -U "$(whoami)" | sed '1,3d' 2>/dev/null
+        sudo -l -U "$(whoami)" 2>/dev/null | sed '1,3d'
     else
         if [ "$sudo_password_set" = true  ]; then
             echo "${YELLOW}Sudo Privileges:${RESET}"
-            echo "$sudo_password" | sudo -S -l | sed '1,3d' 2>/dev/null
+            echo "$sudo_password" | sudo -S -l -U "$(whoami)" 2>/dev/null | sed '1,3d'
         fi
     fi
 
@@ -185,8 +185,8 @@ user() {
     echo "${LGREEN}${ITALIC}# Listing all users with shell!${RESET}"
     echo ""
     awk -F: '$7 ~ /(\/bin\/bash|\/bin\/sh|\/bin\/ksh|\/bin\/zsh|\/usr\/bin\/fish)$/ {print $1}' /etc/passwd 2>/dev/null | while read -r user; do
-        groups=$(groups "$user" | cut -d ":" -f 2 2>/dev/null)
-        home_dir=$(getent passwd "$user" | cut -d ":" -f 6 2>/dev/null)
+        groups=$(groups "$user" 2>/dev/null | cut -d ":" -f 2)
+        home_dir=$(getent passwd "$user" 2>/dev/null | cut -d ":" -f 6)
         if [ "$(id -u)" -eq 0 ]; then
             hash=$(awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
             echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
@@ -201,7 +201,7 @@ user() {
     done
 
     echo "${RED}${BOLD}[*] List of Root Users${RESET}"
-    root_users=$(cat /etc/passwd 2>/dev/null | awk -F: '$3 == 0 { print $1}' 2>/dev/null)
+    root_users=$(cat /etc/passwd 2>/dev/null | awk -F: '$3 == 0 { print $1}')
     if [ "$root_users" ]; then
         for user in $root_users; do
             echo "${YELLOW}User:${RESET} $user"
@@ -384,7 +384,8 @@ if [ "$1" = "-o" ]; then
         echo "Please provide a filename for the HTML report."
         exit 1
     fi
-    OUTPUT_FILE="$2"
+    
+    OUTPUT_FILE="${2}.html"
     shift 2
     COMMAND_FILE=$(mktemp)
     while true; do
