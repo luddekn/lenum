@@ -189,13 +189,13 @@ user() {
         home_dir=$(getent passwd "$user" 2>/dev/null | cut -d ":" -f 6)
         if [ "$(id -u)" -eq 0 ]; then
             hash=$(awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
-            echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
+            echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n"
         else
             if [ "$sudo_password_set" = true  ]; then
                 hash=$(echo "$sudo_password" | sudo -S awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
-                echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
+                echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n"
             else
-                echo "${YELLOW}User:${RESET} $user ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET} $groups\n"
+                echo "${YELLOW}User:${RESET} $user ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n"
             fi
         fi
     done
@@ -283,32 +283,23 @@ banner
 echo "Type 'help' to see available commands!"
 sudo_pass
 generate_html() {
-    OUTPUT_FILE="$1"
-    COMMANDS_FILE="$2"
-    TEMP_FILE=$(mktemp)
-
-    # Extract unique commands
-    sort -u "$COMMANDS_FILE" > "$TEMP_FILE"
+    OUTPUT_FILE="output/$1"
+    COMMAND_NAME="$2"
+    OUTPUT=$(cat)
 
     # HTML header and initial styling
-    cat <<EOF > "$OUTPUT_FILE"
+    cat > "$OUTPUT_FILE" <<EOF
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linux Enumeration Report</title>
+    <title>${COMMAND_NAME} Output</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             line-height: 1.6;
-        }
-        h1, h2, h3 {
-            color: #333;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 20px;
         }
         pre {
             background-color: #f9f9f9;
@@ -320,111 +311,121 @@ generate_html() {
     </style>
 </head>
 <body>
-<h1>Linux Enumeration Report</h1>
-<p>Generated on $(date)</p>
-EOF
-
-    # Command sections in HTML
-    while IFS= read -r command; do
-        case "$command" in
-            "os")
-                echo "<h3>OS Information</h3>" >> "$OUTPUT_FILE"
-                echo "<pre>" >> "$OUTPUT_FILE"
-                os | strip_colors >> "$OUTPUT_FILE"
-                echo "</pre>" >> "$OUTPUT_FILE"
-                ;;
-            "env")
-                echo "<h3>Environment Information</h3>" >> "$OUTPUT_FILE"
-                echo "<pre>" >> "$OUTPUT_FILE"
-                environment | strip_colors >> "$OUTPUT_FILE"
-                echo "</pre>" >> "$OUTPUT_FILE"
-                ;;
-            "netinfo")
-                echo "<h3>Network Information</h3>" >> "$OUTPUT_FILE"
-                echo "<pre>" >> "$OUTPUT_FILE"
-                network_info | strip_colors >> "$OUTPUT_FILE"
-                echo "</pre>" >> "$OUTPUT_FILE"
-                ;;
-            "netscan")
-                echo "<h3>Network Scan</h3>" >> "$OUTPUT_FILE"
-                echo "<pre>" >> "$OUTPUT_FILE"
-                network_scan | strip_colors >> "$OUTPUT_FILE"
-                echo "</pre>" >> "$OUTPUT_FILE"
-                ;;
-            "user")
-                echo "<h3>User Information</h3>" >> "$OUTPUT_FILE"
-                echo "<pre>" >> "$OUTPUT_FILE"
-                user | strip_colors >> "$OUTPUT_FILE"
-                echo "</pre>" >> "$OUTPUT_FILE"
-                ;;
-            "interesting")
-                echo "<h3>Interesting Information</h3>" >> "$OUTPUT_FILE"
-                echo "<pre>" >> "$OUTPUT_FILE"
-                interesting | strip_colors >> "$OUTPUT_FILE"
-                echo "</pre>" >> "$OUTPUT_FILE"
-                ;;
-        esac
-    done < "$TEMP_FILE"
-
-    # HTML footer
-    cat <<EOF >> "$OUTPUT_FILE"
+<h1>${COMMAND_NAME} Output</h1>
+<p>Created on $(date)</p>
+<p>>> <a href="../index.html">Go Back</a></p>
+<pre>
+${OUTPUT}
+</pre>
 </body>
 </html>
 EOF
+}
 
-    echo "${LGREEN}HTML report generated: $OUTPUT_FILE${RESET}"
-    
-    # Clean up temporary file
-    rm "$TEMP_FILE"
+# Function to create index.html file with links to all generated HTML files
+create_index_html() {
+    echo "<!DOCTYPE html>" > index.html
+    echo "<html lang=\"en\">" >> index.html
+    echo "<head>" >> index.html
+    echo "<meta charset=\"UTF-8\">" >> index.html
+    echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" >> index.html
+    echo "<title>Generated HTML Index</title>" >> index.html
+    echo "<style>" >> index.html
+    echo "    body {" >> index.html
+    echo "        font-family: Arial, sans-serif;" >> index.html
+    echo "        margin: 20px;" >> index.html
+    echo "        line-height: 1.6;" >> index.html
+    echo "    }" >> index.html
+    echo "    table {" >> index.html
+    echo "        width: 80%;" >> index.html
+    echo "        border-collapse: collapse;" >> index.html
+    echo "        margin-top: 20px;" >> index.html
+    echo "    }" >> index.html
+    echo "    th, td {" >> index.html
+    echo "        border: 1px solid #ddd;" >> index.html
+    echo "        padding: 8px;" >> index.html
+    echo "        text-align: left;" >> index.html
+    echo "    }" >> index.html
+    echo "    th {" >> index.html
+    echo "        background-color: #f2f2f2;" >> index.html
+    echo "    }" >> index.html
+    echo "</style>" >> index.html
+    echo "</head>" >> index.html
+    echo "<body>" >> index.html
+    echo "<h1>Enumeration Report</h1>" >> index.html
+    echo "<p>Created on $(date)</p>" >> index.html
+    echo "<table>" >> index.html
+    echo "<tr>" >> index.html
+    echo "<th>Result</th><th>Link</th>" >> index.html
+    echo "</tr>" >> index.html
+
+    for file in output/*.html; do
+        filename=$(basename "$file" .html)
+        filename_without_underscore=$(echo "$filename" | sed 's/_/ /g')
+        echo "<tr>" >> index.html
+        echo "<td>${filename_without_underscore}</td>" >> index.html
+        echo "<td><a href=\"${file}\">View</a></td>" >> index.html
+        echo "</tr>" >> index.html
+    done
+
+    echo "</table>" >> index.html
+    echo "</body>" >> index.html
+    echo "</html>" >> index.html
 }
 
 # Main program starts here
 if [ "$1" = "-o" ]; then
-    if [ -z "$2" ]; then
-        echo "Please provide a filename for the HTML report."
-        exit 1
-    fi
-    
-    OUTPUT_FILE="${2}.html"
-    shift 2
-    COMMAND_FILE=$(mktemp)
+    mkdir -p output
+    shift
     while true; do
         read -p "$(echo "${LCYAN}${BOLD}lenum${RESET}# ")" command
-		case "$command" in
-			"help")
-				help
-				;;
-			"os")
-				os_information
-				;;
-            "env")
-                environment
+        case "$command" in
+            "help")
+                help
                 ;;
-			"netinfo")
-				network_info
-				;;
-			"netscan")
-				network_scan
-				;;
-			"user")
-				user
-				;;
-			"interesting")
-				interesting
-				;;
-			"exit")
-				echo "${RED}Exiting lenum script.${RESET}"
-                echo ""
-				generate_html "$OUTPUT_FILE" "$COMMAND_FILE"
-				rm "$COMMAND_FILE"  # Clean up temporary command file
+            "os")
+                os_command=$(os_information)
+                echo "${os_command}"
+                echo "${os_command}" | strip_colors | generate_html "os_information.html" "OS Information"
+                ;;
+            "env")
+                environment_command=$(environment)
+                echo "${environment_command}"
+                echo "${environment_command}" | strip_colors | generate_html "environment_information.html" "Environment Information"
+                ;;
+            "netinfo")
+                netinfo_command=$(network_info)
+                echo "${netinfo_command}"
+                echo "${netinfo_command}" | strip_colors | generate_html "network_information.html" "Network Information"
+                ;;
+            "netscan")
+                netscan_command=$(network_scan)
+                echo "${netscan_command}"
+                echo "${netscan_command}" | strip_colors | generate_html "network_scan.html" "Network Scan"
+                ;;
+            "user")
+                user_command=$(user)
+                echo "${user_command}"
+                echo "${user_command}" | strip_colors | generate_html "user_information.html" "User Information"
+                ;;
+            "interesting")
+                interesting_command=$(interesting)
+                echo "${interesting_command}"
+                echo "${interesting_command}" | strip_colors | generate_html "interesting_information.html" "Interesting Information"
+                ;;
+            "exit")
+                echo "${RED}Exiting enum script.${RESET}"
                 unset sudo_password
-				exit 0
-				;;
-			*)
-				echo "${RED}Unknown command: '${command}'. Type 'help' for available commands.${RESET}"
-				;;
-		esac
-		echo ""
+                create_index_html
+                echo "${LGREEN}Created index.html file.${RESET}"
+                echo ""
+                exit 0
+                ;;
+            *)
+                echo "${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}"
+                ;;
+        esac
+        echo ""
     done
 else
     while true; do
@@ -452,13 +453,13 @@ else
                 interesting
                 ;;
             "exit")
-                echo "${RED}Exiting lenum script.${RESET}"
-                echo ""
+                echo "${RED}Exiting enum script.${RESET}"
                 unset sudo_password
+                echo ""
                 exit 0
                 ;;
             *)
-                echo "${RED}Unknown command: '${command}'. Type 'help' for available commands.${RESET}"
+                echo "${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}"
                 ;;
         esac
         echo ""
