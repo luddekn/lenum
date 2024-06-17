@@ -52,12 +52,8 @@ sudo_pass() {
         return
     fi
 
-    echo -n "Sudo password for current user '$(whoami)' (press ENTER to skip): "
-
-    stty -echo
+    printf "Sudo password for current user '$(whoami)' (press ENTER to skip): "
     read sudo_password
-    stty echo
-    echo
 
     if [ -z "$sudo_password" ]; then
         sudo_password_set=false
@@ -329,7 +325,7 @@ create_index_html() {
     echo "<head>" >> index.html
     echo "<meta charset=\"UTF-8\">" >> index.html
     echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" >> index.html
-    echo "<title>Generated HTML Index</title>" >> index.html
+    echo "<title>Enumeration Report</title>" >> index.html
     echo "<style>" >> index.html
     echo "    body {" >> index.html
     echo "        font-family: Arial, sans-serif;" >> index.html
@@ -378,7 +374,8 @@ if [ "$1" = "-o" ]; then
     mkdir -p output
     shift
     while true; do
-        read -p "$(echo "${LCYAN}${BOLD}lenum${RESET}# ")" command
+        printf "${LCYAN}${BOLD}lenum${RESET}# "
+        read command
         case "$command" in
             "help")
                 help
@@ -429,7 +426,8 @@ if [ "$1" = "-o" ]; then
     done
 else
     while true; do
-        read -p "$(echo "${LCYAN}${BOLD}lenum${RESET}# ")" command
+        printf "$(echo "${LCYAN}${BOLD}lenum${RESET}# ")"
+        read command
         case "$command" in
             "help")
                 help
