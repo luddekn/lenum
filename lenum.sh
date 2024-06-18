@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script is created to automate the process of doing manual
 # enumeration of a Linux machine.
@@ -6,140 +6,136 @@
 # Created by @ludvikkristoffersen 2024
 
 # Colors
-RED="\e[31m"
-YELLOW="\e[33m"
-LGREEN="\e[92m"
-LCYAN="\e[96m"
-CYAN="\e[36m"
-LMAGENTA="\e[95m"
+RED="\033[31m"
+YELLOW="\033[33m"
+LGREEN="\033[92m"
+LCYAN="\033[96m"
+CYAN="\033[36m"
+LMAGENTA="\033[95m"
 # Text Weight
-BOLD="\e[1m"
-ITALIC="\e[3m"
+BOLD="\033[1m"
+ITALIC="\033[3m"
 # Style Reset
-RESET="\e[0m"
+RESET="\033[0m"
 
 # Function to print the banner
 banner() {
-    echo "${RED}${BOLD}    .--.${RESET}"
-    echo "${RED}${BOLD}   |o_o |  ${RESET}"
-    echo "${RED}${BOLD}   |:_/ |${RESET}       ${CYAN}${BOLD}__    ______                    ${RESET}"
-    echo "${RED}${BOLD}  //   \\ \\ ${RESET}    ${CYAN}${BOLD}/ /   / ____/___  __  ______ ___ ${RESET}"
-    echo "${RED}${BOLD} (|     | )${RESET}   ${CYAN}${BOLD}/ /   / __/ / __ \/ / / / __ \`__ \ ${RESET}"
-    echo "${RED}${BOLD}/'\\_   _/\\\`\\ ${RESET}${CYAN}${BOLD}/ /___/ /___/ / / / /_/ / / / / / / ${RESET}"
-    echo "${RED}${BOLD}\\___)=(___/${RESET} ${CYAN}${BOLD}/_____/_____/_/ /_/\__,_/_/ /_/ /_/ ${RESET}"
-    echo "${YELLOW}${BOLD}Linux Enumeration (2024) @ludvikkristoffersen${RESET}"
-    echo ""
+    printf "${RED}${BOLD}    .--.${RESET}\n"
+    printf "${RED}${BOLD}   |o_o |  ${RESET}\n"
+    printf "${RED}${BOLD}   |:_/ |${RESET}       ${CYAN}${BOLD}__    ______                    ${RESET}\n"
+    printf "${RED}${BOLD}  //   \\ \\ ${RESET}    ${CYAN}${BOLD}/ /   / ____/___  __  ______ ___ ${RESET}\n"
+    printf "${RED}${BOLD} (|     | )${RESET}   ${CYAN}${BOLD}/ /   / __/ / __ \/ / / / __ \`__ \ ${RESET}\n"
+    printf "${RED}${BOLD}/'\\_   _/\\\`\\ ${RESET}${CYAN}${BOLD}/ /___/ /___/ / / / /_/ / / / / / / ${RESET}\n"
+    printf "${RED}${BOLD}\\___)=(___/${RESET} ${CYAN}${BOLD}/_____/_____/_/ /_/\__,_/_/ /_/ /_/ ${RESET}\n"
+    printf "${YELLOW}${BOLD}Linux Enumeration (2024) @ludvikkristoffersen${RESET}\n"
 }
 
 # Function to display help information
 help() {
-    echo ""
-    echo "${YELLOW}Available commands:${RESET}"
-    echo "  -> ${LMAGENTA}${BOLD}os${RESET}: Display information about the operating system."
-    echo "  -> ${LMAGENTA}${BOLD}env${RESET}: Display information about the current environment."
-    echo "  -> ${LMAGENTA}${BOLD}user${RESET}: Show details of the current user and information about other users."
-    echo "  -> ${LMAGENTA}${BOLD}netinfo${RESET}: Display network configuration and status."
-    echo "  -> ${LMAGENTA}${BOLD}netscan${RESET}: Perform a ping sweep on all network interfaces."
-    echo "  -> ${LMAGENTA}${BOLD}interesting${RESET}: Identify and list interesting files or directories for further inspection."
-    echo "  -> ${LMAGENTA}${BOLD}exit${RESET}: Exit the script."
-    echo "  -> ${LMAGENTA}${BOLD}help${RESET}: Display this help menu."
+    printf "\n"
+    printf "${YELLOW}Available commands:${RESET}\n"
+    printf "  -> ${LMAGENTA}${BOLD}os${RESET}: Display information about the operating system.\n"
+    printf "  -> ${LMAGENTA}${BOLD}env${RESET}: Display information about the current environment.\n"
+    printf "  -> ${LMAGENTA}${BOLD}user${RESET}: Show details of the current user and information about other users.\n"
+    printf "  -> ${LMAGENTA}${BOLD}netinfo${RESET}: Display network configuration and status.\n"
+    printf "  -> ${LMAGENTA}${BOLD}netscan${RESET}: Perform a ping sweep on all network interfaces.\n"
+    printf "  -> ${LMAGENTA}${BOLD}interesting${RESET}: Identify and list interesting files or directories for further inspection.\n"
+    printf "  -> ${LMAGENTA}${BOLD}exit${RESET}: Exit the script.\n"
+    printf "  -> ${LMAGENTA}${BOLD}help${RESET}: Display this help menu.\n"
 }
 
 sudo_pass() {
     if [ "$(id -u)" -eq 0 ]; then
-        echo "You are running as root. No need to input sudo password."
-        echo ""
+        printf "You are running as root. No need to input sudo password.\n\n"
         return
     fi
 
     printf "Sudo password for current user '$(whoami)' (press ENTER to skip): "
-    read sudo_password
+    read -s sudo_password
 
     if [ -z "$sudo_password" ]; then
         sudo_password_set=false
-        echo ""
+        printf "\n\n"
     else
-        echo "Sudo password has been set!"
+        printf "\nSudo password has been set.\n\n"
         sudo_password_set=true
-        echo ""
     fi
 }
 
 # Function to gather OS information
 os_information() {
-    echo ""
-    echo "${RED}${BOLD}[*] OS / System Information${RESET}"
-    echo "${YELLOW}OS:${RESET} $(grep PRETTY_NAME /etc/os-release | cut -d '"' -f 2 2>/dev/null)"
-    echo "${YELLOW}OS Version:${RESET} $(grep -w 'VERSION' /etc/os-release | cut -d '"' -f 2 2>/dev/null)"
-    echo "${YELLOW}Linux Kernel:${RESET} $(uname -r 2>/dev/null)"
-    echo "${YELLOW}Hostname:${RESET} $(hostname 2>/dev/null)"
+    printf "\n"
+    printf "${RED}${BOLD}[*] OS / System Information${RESET}\n"
+    printf "${YELLOW}OS:${RESET} $(grep PRETTY_NAME /etc/os-release | cut -d '"' -f 2 2>/dev/null)\n"
+    printf "${YELLOW}OS Version:${RESET} $(grep -w 'VERSION' /etc/os-release | cut -d '"' -f 2 2>/dev/null)\n"
+    printf "${YELLOW}Linux Kernel:${RESET} $(uname -r 2>/dev/null)\n"
+    printf "${YELLOW}Hostname:${RESET} $(hostname 2>/dev/null)\n"
 }
 
 # Function to gather environment data
 environment() {
-    echo ""
-    echo "${RED}${BOLD}[*] Environment Information${RESET}"
-    echo "${YELLOW}User:${RESET} $USER"
-    echo "${YELLOW}Home:${RESET} $HOME"
-    echo "${YELLOW}Shell:${RESET} $SHELL"
-    echo "${YELLOW}Working Directory:${RESET} $PWD"
-    echo "${YELLOW}Session Type:${RESET} $XDG_SESSION_TYPE"
-    echo "${YELLOW}Desktop Environment:${RESET} $XDG_CURRENT_DESKTOP"
-    echo "${YELLOW}Language:${RESET} $LANG"
-    echo "${YELLOW}Locale:${RESET} $LANGUAGE"
-    echo "${YELLOW}PATH:${RESET} $PATH"
-    echo "${YELLOW}SSH Agent PID:${RESET} $SSH_AGENT_PID"
-    echo "${YELLOW}SSH Auth Socket:${RESET} $SSH_AUTH_SOCK"
-    echo "${YELLOW}DBUS Session Bus Address:${RESET} $DBUS_SESSION_BUS_ADDRESS"
-    echo "${YELLOW}Display:${RESET} $DISPLAY"
-    echo "${YELLOW}X Authority File:${RESET} $XAUTHORITY"
-    echo "${YELLOW}Runtime Directory:${RESET} $XDG_RUNTIME_DIR"
+    printf "\n"
+    printf "${RED}${BOLD}[*] Environment Information${RESET}\n"
+    printf "${YELLOW}User:${RESET} $USER\n"
+    printf "${YELLOW}Home:${RESET} $HOME\n"
+    printf "${YELLOW}Shell:${RESET} $SHELL\n"
+    printf "${YELLOW}Working Directory:${RESET} $PWD\n"
+    printf "${YELLOW}Session Type:${RESET} $XDG_SESSION_TYPE\n"
+    printf "${YELLOW}Desktop Environment:${RESET} $XDG_CURRENT_DESKTOP\n"
+    printf "${YELLOW}Language:${RESET} $LANG\n"
+    printf "${YELLOW}Locale:${RESET} $LANGUAGE\n"
+    printf "${YELLOW}PATH:${RESET} $PATH\n"
+    printf "${YELLOW}SSH Agent PID:${RESET} $SSH_AGENT_PID\n"
+    printf "${YELLOW}SSH Auth Socket:${RESET} $SSH_AUTH_SOCK\n"
+    printf "${YELLOW}DBUS Session Bus Address:${RESET} $DBUS_SESSION_BUS_ADDRESS\n"
+    printf "${YELLOW}Display:${RESET} $DISPLAY\n"
+    printf "${YELLOW}X Authority File:${RESET} $XAUTHORITY\n"
+    printf "${YELLOW}Runtime Directory:${RESET} $XDG_RUNTIME_DIR\n"
 }
 
 # Function to gather network information
 network_info() {
-    echo ""
-    echo "${RED}${BOLD}[*] Network Information${RESET}"
-    echo "${LGREEN}${ITALIC}# Listing all interfaces!${RESET}"
-    echo ""
+    printf "\n"
+    printf "${RED}${BOLD}[*] Network Information${RESET}\n"
+    printf "${LGREEN}${ITALIC}# Listing all interfaces!${RESET}\n"
     for interface in $(ip a | awk '/^[0-9]+:/ { sub(/:/, "", $2); print $2 }' 2>/dev/null); do
         ip=$(ip -4 -o addr show dev "$interface" | awk '{print $4}' 2>/dev/null)
         if [ -n "$ip" ]; then
-            echo "${YELLOW}Interface:${RESET} $interface : $ip"
+            printf "${YELLOW}Interface:${RESET} $interface : $ip\n"
         fi
     done
 
-    echo ""
+    printf "\n"
 
-    echo "${YELLOW}Default Route:${RESET} $(ip route | grep -w "default" | cut -d " " -f 5) $(ip route | grep -w "default" | cut -d " " -f 3 2>/dev/null)"
-    echo "${YELLOW}DNS Nameserver:${RESET} $(awk '/nameserver/ {print $2}' /etc/resolv.conf 2>/dev/null)"
+    printf "${YELLOW}Default Route:${RESET} $(ip route | grep -w "default" | cut -d " " -f 5) $(ip route | grep -w "default" | cut -d " " -f 3 2>/dev/null)\n"
+    printf "${YELLOW}DNS Nameserver:${RESET} $(awk '/nameserver/ {print $2}' /etc/resolv.conf 2>/dev/null)\n"
 
-    echo ""
+    printf "\n"
 
     if [ "$sudo_password_set" = true  ]; then
-        echo "${YELLOW}Open Ports:${RESET}"
-        echo "$sudo_password" | sudo -S netstat -tunlp 2>/dev/null | sed '1d'
+        printf "${YELLOW}Open Ports:${RESET}\n"
+        printf "$sudo_password" | sudo -S netstat -tunlp 2>/dev/null | sed '1d'
     else
-        echo "${YELLOW}Open Ports:${RESET}"
+        printf "${YELLOW}Open Ports:${RESET}\n"
         netstat -tunlp 2>/dev/null | sed '1d'
     fi
-    echo ""
+    printf "\n"
 }
 
 # Function to perform network scanning
 network_scan() {
-    echo ""
-    echo "${RED}${BOLD}[*] Network Scan${RESET}"
+    printf "\n"
+    printf "${RED}${BOLD}[*] Network Scan${RESET}\n"
     for interface in $(ip a | awk '/^[0-9]+:/ { sub(/:/, "", $2); print $2 }' 2>/dev/null); do
         ip=$(ip -4 -o addr show dev $interface | awk '{print $4}' | cut -d '/' -f 1 2>/dev/null)
         if [ -n "$ip" ]; then
-            network_address=$(echo $ip | cut -d "." -f 1-3 2>/dev/null)
+            network_address=$(printf $ip | cut -d "." -f 1-3 2>/dev/null)
             if [ "$network_address" = "127.0.0" ]; then
                 continue
             fi
             for host in $(seq 1 254); do
                 target_ip="${network_address}.${host}"
-                ping -c 1 -W 1 $target_ip > /dev/null 2>&1 && echo "${YELLOW}Alive Host:${RESET} $target_ip" &
+                ping -c 1 -W 1 $target_ip > /dev/null 2>&1 && printf "${YELLOW}Alive Host:${RESET} $target_ip\n" &
             done
             wait
         fi
@@ -148,101 +144,100 @@ network_scan() {
 
 # Function to gather user information
 user() {
-    echo ""
-    echo "${RED}${BOLD}[*] Current User Information${RESET}"
-    echo "${YELLOW}Current User:${RESET} $(whoami 2>/dev/null)"
-    echo "${YELLOW}ID:${RESET} $(id 2>/dev/null | cut -d " " -f 1-2)"
-    echo "${YELLOW}Groups:${RESET} $(groups 2>/dev/null)"
+    printf "\n"
+    printf "${RED}${BOLD}[*] Current User Information${RESET}\n"
+    printf "${YELLOW}Current User:${RESET} $(whoami 2>/dev/null)\n"
+    printf "${YELLOW}ID:${RESET} $(id 2>/dev/null | cut -d " " -f 1-2)\n"
+    printf "${YELLOW}Groups:${RESET} $(groups 2>/dev/null)\n"
     reading_shadow=$(cat /etc/shadow 2>/dev/null)
     if [ "$reading_shadow" ]; then
-        echo "${YELLOW}Can we read shadow file without sudo?:${RESET} ${LGREEN}YES${RESET}"
+        printf "${YELLOW}Can we read shadow file without sudo?:${RESET} ${LGREEN}YES${RESET}\n"
     else
-        echo "${YELLOW}Can we read shadow file without sudo?:${RESET} ${RED}NO${RESET}"
+        printf "${YELLOW}Can we read shadow file without sudo?:${RESET} ${RED}NO${RESET}\n"
     fi
     accessing_root=$(ls /root 2>/dev/null)
     if [ "$accessing_root" ]; then
-        echo "${YELLOW}Can we access /root without sudo?:${RESET} ${LGREEN}YES${RESET}"
+        printf "${YELLOW}Can we access /root without sudo?:${RESET} ${LGREEN}YES${RESET}\n"
     else
-        echo "${YELLOW}Can we access /root without sudo?:${RESET} ${RED}NO${RESET}"
+        printf "${YELLOW}Can we access /root without sudo?:${RESET} ${RED}NO${RESET}\n"
     fi
     if [ "$(id -u)" -eq 0 ]; then
-        echo "${YELLOW}Sudo Privileges:${RESET}"
+        printf "${YELLOW}Sudo Privileges:${RESET}\n"
         sudo -l -U "$(whoami)" 2>/dev/null | sed '1,3d'
     else
         if [ "$sudo_password_set" = true  ]; then
-            echo "${YELLOW}Sudo Privileges:${RESET}"
-            echo "$sudo_password" | sudo -S -l -U "$(whoami)" 2>/dev/null | sed '1,3d'
+            printf "${YELLOW}Sudo Privileges:${RESET}\n"
+            printf "$sudo_password" | sudo -S -l -U "$(whoami)" 2>/dev/null | sed '1,3d'
         fi
     fi
 
-    echo ""
+    printf "\n"
 
-    echo "${RED}${BOLD}[*] Other User Enumeration${RESET}"
-    echo "${LGREEN}${ITALIC}# Listing all users with shell!${RESET}"
-    echo ""
+    printf "${RED}${BOLD}[*] Other User Enumeration${RESET}\n"
+    printf "${LGREEN}${ITALIC}# Listing all users with shell!${RESET}\n\n"
     awk -F: '$7 ~ /(\/bin\/bash|\/bin\/sh|\/bin\/ksh|\/bin\/zsh|\/usr\/bin\/fish)$/ {print $1}' /etc/passwd 2>/dev/null | while read -r user; do
         groups=$(groups "$user" 2>/dev/null | cut -d ":" -f 2)
         home_dir=$(getent passwd "$user" 2>/dev/null | cut -d ":" -f 6)
         if [ "$(id -u)" -eq 0 ]; then
             hash=$(awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
-            echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n"
+            printf "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n\n"
         else
             if [ "$sudo_password_set" = true  ]; then
-                hash=$(echo "$sudo_password" | sudo -S awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
-                echo "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n"
+                hash=$(printf "$sudo_password" | sudo -S awk -v user="$user" -F: '($1 == user) {print $2}' /etc/shadow 2>/dev/null)
+                printf "${YELLOW}User:${RESET} $user ${YELLOW}Password Hash:${RESET} $hash ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n\n"
             else
-                echo "${YELLOW}User:${RESET} $user ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n"
+                printf "${YELLOW}User:${RESET} $user ${YELLOW}Home Directory:${RESET} $home_dir ${YELLOW}Groups:${RESET}$groups\n\n"
             fi
         fi
     done
 
-    echo "${RED}${BOLD}[*] List of Root Users${RESET}"
+    printf "${RED}${BOLD}[*] List of Root Users${RESET}\n"
     root_users=$(cat /etc/passwd 2>/dev/null | awk -F: '$3 == 0 { print $1}')
     if [ "$root_users" ]; then
         for user in $root_users; do
-            echo "${YELLOW}User:${RESET} $user"
+            printf "${YELLOW}User:${RESET} $user\n"
         done
     else
-        echo "${LGREEN}${ITALIC}# Found no root user's!${RESET}"
+        printf "${LGREEN}${ITALIC}# Found no root user account's.${RESET}\n"
     fi
 }
 
 # Function to gather interesting files and directories
 interesting() {
-    echo ""
-    echo "${RED}${BOLD}[*] Listing User SSH Directories${RESET}"
+    printf "\n"
+    printf "${RED}${BOLD}[*] Listing User SSH Directories${RESET}\n"
     found_dir=false
     for dir in /home/*; do
         ssh_dir=$(find "$dir" -name ".ssh" 2>/dev/null)
         if [ -n "$ssh_dir" ]; then
-            echo "${YELLOW}SSH Directory:${RESET} $ssh_dir"
+            printf "${YELLOW}SSH Directory:${RESET} $ssh_dir\n"
             found_dir=true
         fi
     done
 
     if [ "$(id -u)" -eq 0 ] && [ -d "/root/.ssh" ]; then
-        echo "${YELLOW}SSH Directory:${RESET} /root/.ssh"
+        printf "${YELLOW}SSH Directory:${RESET} /root/.ssh\n"
         found_dir=true
     elif [ "$sudo_password_set" = true ]; then
-        ssh_dir=$(echo "$sudo_password" | sudo -S find /root -name ".ssh" 2>/dev/null)
+        ssh_dir=$(printf "$sudo_password" | sudo -S find /root -name ".ssh" 2>/dev/null)
         if [ -n "$ssh_dir" ]; then
-            echo "${YELLOW}SSH Directory:${RESET} $ssh_dir"
+            printf "${YELLOW}SSH Directory:${RESET} $ssh_dir\n"
             found_dir=true
         fi
     fi
 
     if [ "$found_dir" = false ]; then
-        echo "${LGREEN}${ITALIC}# Found no .ssh directories!${RESET}"
+        printf "${LGREEN}${ITALIC}# Found no .ssh directories.${RESET}\n"
     fi
 
-    echo ""
+    printf "\n"
 
-    echo "${RED}${BOLD}[*] Listing User History Files${RESET}"
+    printf "${RED}${BOLD}[*] Listing User History Files${RESET}\n"
     found_file=false
     for dir in /home/*; do
         for hist_file in "$dir"/.bash_history "$dir"/.zsh_history "$dir"/.sh_history "$dir"/.ksh_history "$dir"/.history "$dir"/.local/share/fish/fish_history; do
             if [ -e "$hist_file" ]; then
-                echo "${YELLOW}History File:${RESET} $hist_file"
+                printf "${YELLOW}History File:${RESET} $hist_file\n"
                 found_file=true
             fi
         done
@@ -251,21 +246,21 @@ interesting() {
     if [ "$(id -u)" -eq 0 ]; then
         for hist_file in /root/.bash_history /root/.zsh_history /root/.sh_history /root/.ksh_history /root/.history /root/.local/share/fish/fish_history; do
             if [ -e "$hist_file" ]; then
-                echo "${YELLOW}History File:${RESET} $hist_file"
+                printf "${YELLOW}History File:${RESET} $hist_file\n"
                 found_file=true
             fi
         done
     elif [ "$sudo_password_set" = true ]; then
         for hist_file in /root/.bash_history /root/.zsh_history /root/.sh_history /root/.ksh_history /root/.history /root/.local/share/fish/fish_history; do
-            if echo "$sudo_password" | sudo -S test -e "$hist_file" 2>/dev/null; then
-                echo "${YELLOW}History File:${RESET} $hist_file"
+            if printf "$sudo_password" | sudo -S test -e "$hist_file" 2>/dev/null; then
+                printf "${YELLOW}History File:${RESET} $hist_file\n"
                 found_file=true
             fi
         done
     fi
 
     if [ "$found_file" = false ]; then
-        echo "${LGREEN}${ITALIC}# Found no history files!${RESET}"
+        printf "${LGREEN}${ITALIC}# Found no history files.${RESET}\n"
     fi
 }
 
@@ -274,9 +269,8 @@ strip_colors() {
 }
 
 # Starting script
-echo ""
 banner
-echo "Type 'help' to see available commands!"
+printf "\nType 'help' to see available commands!\n"
 sudo_pass
 generate_html() {
     OUTPUT_FILE="output/$1"
@@ -411,18 +405,16 @@ if [ "$1" = "-o" ]; then
                 echo "${interesting_command}" | strip_colors | generate_html "interesting_information.html" "Interesting Information"
                 ;;
             "exit")
-                echo "${RED}Exiting enum script.${RESET}"
+                printf "\n${RED}Exiting enum script.${RESET}\n"
                 unset sudo_password
                 create_index_html
-                echo "${LGREEN}Created index.html file.${RESET}"
-                echo ""
+                printf "${LGREEN}Created index.html file.${RESET}\n\n"
                 exit 0
                 ;;
             *)
-                echo "${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}"
+                printf "\n${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}\n"
                 ;;
         esac
-        echo ""
     done
 else
     while true; do
@@ -451,15 +443,13 @@ else
                 interesting
                 ;;
             "exit")
-                echo "${RED}Exiting enum script.${RESET}"
+                printf "\n${RED}Exiting enum script.${RESET}\n\n"
                 unset sudo_password
-                echo ""
                 exit 0
                 ;;
             *)
-                echo "${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}"
+                printf "\n${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}\n\n"
                 ;;
         esac
-        echo ""
     done
 fi
