@@ -415,10 +415,11 @@ if [ "$1" = "-o" ]; then
                 printf "\n${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}\n"
                 ;;
         esac
+        printf "\n"
     done
 else
     while true; do
-        printf "$(echo "${LCYAN}${BOLD}lenum${RESET}# ")"
+        printf "${LCYAN}${BOLD}lenum${RESET}# "
         read command
         case "$command" in
             "help")
@@ -451,5 +452,6 @@ else
                 printf "\n${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}\n\n"
                 ;;
         esac
+        printf "\n"
     done
 fi
