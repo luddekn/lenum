@@ -1,2 +1,2 @@
-# fast-enum
+# LEnum
 Manual enumeration made faster!
