@@ -314,53 +314,53 @@ EOF
 
 # Function to create index.html file with links to all generated HTML files
 create_index_html() {
-    echo "<!DOCTYPE html>" > index.html
-    echo "<html lang=\"en\">" >> index.html
-    echo "<head>" >> index.html
-    echo "<meta charset=\"UTF-8\">" >> index.html
-    echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" >> index.html
-    echo "<title>Enumeration Report</title>" >> index.html
-    echo "<style>" >> index.html
-    echo "    body {" >> index.html
-    echo "        font-family: Arial, sans-serif;" >> index.html
-    echo "        margin: 20px;" >> index.html
-    echo "        line-height: 1.6;" >> index.html
-    echo "    }" >> index.html
-    echo "    table {" >> index.html
-    echo "        width: 80%;" >> index.html
-    echo "        border-collapse: collapse;" >> index.html
-    echo "        margin-top: 20px;" >> index.html
-    echo "    }" >> index.html
-    echo "    th, td {" >> index.html
-    echo "        border: 1px solid #ddd;" >> index.html
-    echo "        padding: 8px;" >> index.html
-    echo "        text-align: left;" >> index.html
-    echo "    }" >> index.html
-    echo "    th {" >> index.html
-    echo "        background-color: #f2f2f2;" >> index.html
-    echo "    }" >> index.html
-    echo "</style>" >> index.html
-    echo "</head>" >> index.html
-    echo "<body>" >> index.html
-    echo "<h1>Enumeration Report</h1>" >> index.html
-    echo "<p>Created on $(date)</p>" >> index.html
-    echo "<table>" >> index.html
-    echo "<tr>" >> index.html
-    echo "<th>Result</th><th>Link</th>" >> index.html
-    echo "</tr>" >> index.html
+    printf "<!DOCTYPE html>\n" > index.html
+    printf "<html lang=\"en\">\n" >> index.html
+    printf "<head>\n" >> index.html
+    printf "<meta charset=\"UTF-8\">\n" >> index.html
+    printf "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" >> index.html
+    printf "<title>Enumeration Report</title>\n" >> index.html
+    printf "<style>\n" >> index.html
+    printf "    body {\n" >> index.html
+    printf "        font-family: Arial, sans-serif;\n" >> index.html
+    printf "        margin: 20px;\n" >> index.html
+    printf "        line-height: 1.6;\n" >> index.html
+    printf "    }\n" >> index.html
+    printf "    table {\n" >> index.html
+    printf "        width: 80%%;\n" >> index.html
+    printf "        border-collapse: collapse;\n" >> index.html
+    printf "        margin-top: 20px;\n" >> index.html
+    printf "    }\n" >> index.html
+    printf "    th, td {\n" >> index.html
+    printf "        border: 1px solid #ddd;\n" >> index.html
+    printf "        padding: 8px;\n" >> index.html
+    printf "        text-align: left;\n" >> index.html
+    printf "    }\n" >> index.html
+    printf "    th {\n" >> index.html
+    printf "        background-color: #f2f2f2;\n" >> index.html
+    printf "    }\n" >> index.html
+    printf "</style>\n" >> index.html
+    printf "</head>\n" >> index.html
+    printf "<body>\n" >> index.html
+    printf "<h1>Enumeration Report</h1>\n" >> index.html
+    printf "<p>Created on %s</p>\n" "$(date)" >> index.html
+    printf "<table>\n" >> index.html
+    printf "<tr>\n" >> index.html
+    printf "<th>Result</th><th>Link</th>\n" >> index.html
+    printf "</tr>\n" >> index.html
 
     for file in output/*.html; do
         filename=$(basename "$file" .html)
-        filename_without_underscore=$(echo "$filename" | sed 's/_/ /g')
-        echo "<tr>" >> index.html
-        echo "<td>${filename_without_underscore}</td>" >> index.html
-        echo "<td><a href=\"${file}\">View</a></td>" >> index.html
-        echo "</tr>" >> index.html
+        filename_without_underscore=$(printf "$filename" | sed 's/_/ /g')
+        printf "<tr>\n" >> index.html
+        printf "<td>%s</td>\n" "$filename_without_underscore" >> index.html
+        printf "<td><a href=\"%s\">View</a></td>\n" "$file" >> index.html
+        printf "</tr>\n" >> index.html
     done
 
-    echo "</table>" >> index.html
-    echo "</body>" >> index.html
-    echo "</html>" >> index.html
+    printf "</table>\n" >> index.html
+    printf "</body>\n" >> index.html
+    printf "</html>\n" >> index.html
 }
 
 # Main program starts here
@@ -376,33 +376,33 @@ if [ "$1" = "-o" ]; then
                 ;;
             "os")
                 os_command=$(os_information)
-                echo "${os_command}"
-                echo "${os_command}" | strip_colors | generate_html "os_information.html" "OS Information"
+                printf "${os_command}"
+                printf "${os_command}" | strip_colors | generate_html "os_information.html" "OS Information"
                 ;;
             "env")
                 environment_command=$(environment)
-                echo "${environment_command}"
-                echo "${environment_command}" | strip_colors | generate_html "environment_information.html" "Environment Information"
+                printf "${environment_command}"
+                printf "${environment_command}" | strip_colors | generate_html "environment_information.html" "Environment Information"
                 ;;
             "netinfo")
                 netinfo_command=$(network_info)
-                echo "${netinfo_command}"
-                echo "${netinfo_command}" | strip_colors | generate_html "network_information.html" "Network Information"
+                printf "${netinfo_command}"
+                printf "${netinfo_command}" | strip_colors | generate_html "network_information.html" "Network Information"
                 ;;
             "netscan")
                 netscan_command=$(network_scan)
-                echo "${netscan_command}"
-                echo "${netscan_command}" | strip_colors | generate_html "network_scan.html" "Network Scan"
+                printf "${netscan_command}"
+                printf "${netscan_command}" | strip_colors | generate_html "network_scan.html" "Network Scan"
                 ;;
             "user")
                 user_command=$(user)
-                echo "${user_command}"
-                echo "${user_command}" | strip_colors | generate_html "user_information.html" "User Information"
+                printf "${user_command}"
+                printf "${user_command}" | strip_colors | generate_html "user_information.html" "User Information"
                 ;;
             "interesting")
                 interesting_command=$(interesting)
-                echo "${interesting_command}"
-                echo "${interesting_command}" | strip_colors | generate_html "interesting_information.html" "Interesting Information"
+                printf "${interesting_command}"
+                printf "${interesting_command}" | strip_colors | generate_html "interesting_information.html" "Interesting Information"
                 ;;
             "exit")
                 printf "\n${RED}Exiting enum script.${RESET}\n"
@@ -444,12 +444,12 @@ else
                 interesting
                 ;;
             "exit")
-                printf "\n${RED}Exiting enum script.${RESET}\n\n"
+                printf "\n${RED}Exiting enum script.${RESET}\n"
                 unset sudo_password
                 exit 0
                 ;;
             *)
-                printf "\n${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}\n\n"
+                printf "\n${RED}Unknown command: '${RESET}${command}${RED}'. Type 'help' for available commands.${RESET}\n"
                 ;;
         esac
         printf "\n"
