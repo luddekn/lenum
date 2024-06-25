@@ -262,6 +262,27 @@ interesting() {
     if [ "$found_file" = false ]; then
         printf "${LGREEN}${ITALIC}# Found no history files.${RESET}\n"
     fi
+
+    printf "\n${RED}${BOLD}[*] Useful Binaries${RESET}\n"
+    which nc 2>/dev/null; which netcat 2>/dev/null; which wget 2>/dev/null; which nmap 2>/dev/null; which gcc 2>/dev/null; which curl 2>/dev/null; which python 2>/dev/null; which python3 2>/dev/null; which php 2>/dev/null
+
+    printf "\n${RED}${BOLD}[*] SUID files${RESET}\n"
+    find / -perm -4000 -type f 2>/dev/null
+}
+
+# Listing crontab information
+cron() {
+    printf "\n"
+    printf "${RED}${BOLD}[*] Listing User Cron Jobs${RESET}\n"
+    usercron=$(crontab -l 2>/dev/null)
+    if [ "$usercron" ]; then
+        printf "${usercron}\n"
+    else
+        printf "${LGREEN}${ITALIC}# Found no cron jobs for current user.${RESET}\n\n"
+    fi
+
+    printf "${RED}${BOLD}[*] System-wide Cron Jobs${RESET}\n"
+    cat /etc/crontab
 }
 
 strip_colors() {
@@ -404,6 +425,11 @@ if [ "$1" = "-o" ]; then
                 printf "${interesting_command}"
                 printf "${interesting_command}" | strip_colors | generate_html "interesting_information.html" "Interesting Information"
                 ;;
+            "cron")
+                cron_command=$(cron)
+                printf "${cron_command}"
+                printf "${cron_command}" | strip_colors | generate_html "interesting_information.html" "Interesting Information"
+                ;;
             "exit")
                 printf "\n${RED}Exiting enum script.${RESET}\n"
                 unset sudo_password
@@ -443,8 +469,11 @@ else
             "interesting")
                 interesting
                 ;;
+            "cron")
+                cron
+                ;;
             "exit")
-                printf "\n${RED}Exiting enum script.${RESET}\n"
+                printf "\n${RED}Exiting enum script.${RESET}\n\n"
                 unset sudo_password
                 exit 0
                 ;;
