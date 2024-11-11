@@ -1,7 +1,7 @@
 ## Installation
 Installing:
 ```
-git clone https://github.com/ludvikkristoffersen/lenum.git
+git clone https://github.com/luddekn/lenum.git
 ```
 Making the script executable:
 ```
